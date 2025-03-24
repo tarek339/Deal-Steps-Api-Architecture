@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "debug_toolbar",
     "bs4",
+    "pandas",
 ]
 
 MIDDLEWARE = [
