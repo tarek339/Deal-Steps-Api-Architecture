@@ -29,7 +29,7 @@ urlpatterns = [
     path("", home_view, name="home"),
     path("admin/", admin.site.urls),
     path("customer/", include("customer.urls")),
-    path("product/", include("product.urls")),
+    path("products/", include("products.urls")),
     path("__debug__", include(debug_toolbar.urls)),
     path("api-auth/", include("rest_framework.urls")),
 ]
