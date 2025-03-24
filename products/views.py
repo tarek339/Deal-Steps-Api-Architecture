@@ -59,7 +59,7 @@ def update_products():
     #     "span",
     #     "sc-2qclq4-0 sc-fruv23-0 llOhHy fzbBtI sc-18q4lz4-0 jqbzko",
     # )
-    store_in_db(zalando)
+    # store_in_db(zalando)
     # store_in_database(deichmann_sale)
     # store_in_database(deichmann)
     # store_in_database(about_you)
