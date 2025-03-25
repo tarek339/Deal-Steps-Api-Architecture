@@ -38,21 +38,23 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOWED_ORIGINS = [
-    # env("FRONTEND_URL"),
+    env("FRONTEND_URL"),
 ]
 SESSION_COOKIE_SECURE = True
 
 # Email env settings
 EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_BACKEND = env("EMAIL_BACKEND")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+
 FRONTEND_URL = env("FRONTEND_URL")
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -83,7 +85,10 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
-# INTERNAL_IPS = [env("INTERNAL_IPS")]
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
 ROOT_URLCONF = "deal_steps.urls"
 
 TEMPLATES = [

@@ -9,7 +9,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from customer.authentication.authentication import authentication
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -22,16 +21,29 @@ from django.core.exceptions import ObjectDoesNotExist
 @csrf_exempt
 def sign_up_customer(request):
     if request.method == "POST":
-        try:
-            # Parse the request body
-            data = json.loads(request.body)
-            email = data.get("email")
-            password = data.get("password")
+        # Parse the request body
+        body_unicode = request.body.decode("utf-8")
+        data = json.loads(body_unicode)
+        email = data.get("email")
+        password = data.get("password")
 
-            # Create the customer (assuming a Customer model exists)
-            customer = Customer.objects.create_user(
-                username=email, email=email, password=password
+        if not email:
+            return JsonResponse(
+                {"error": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        if not password:
+            return JsonResponse(
+                {"error": "Password is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            if Customer.objects.filter(email=email).exists():
+                return JsonResponse(
+                    {"error": "User with this email already exists."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             new_customer = Customer()
 
@@ -74,24 +86,15 @@ def sign_up_customer(request):
             return JsonResponse(
                 {
                     "message": "Customer signed up successfully.",
-                    "customer_id": customer.id,
+                    "email": email,
                     "token": token,
+                    "customer": {
+                        "id": new_customer.id,
+                        "email": new_customer.email,
+                        "isVerified": new_customer.isVerified,
+                    },
                 },
-                status=status.HTTP_201_CREATED,
-            )
-
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid JSON format."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        except IntegrityError:
-            return JsonResponse(
-                {"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        except ValidationError as e:
-            return JsonResponse(
-                {"error": str(e, "All fields are required.")},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_200_OK,
             )
         except Exception as e:
             # Catch-all for unexpected errors
@@ -101,7 +104,7 @@ def sign_up_customer(request):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
@@ -110,10 +113,11 @@ def sign_up_customer(request):
 @csrf_exempt
 def verify_email(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            verificationToken = data.get("token")
+        body_unicode = request.body.decode("utf-8")
+        data = json.loads(body_unicode)
+        verificationToken = data.get("token")
 
+        try:
             customer = Customer.objects.get(verificationToken=verificationToken)
             customer.isVerified = True
             customer.save()
@@ -135,16 +139,6 @@ def verify_email(request):
                 },
                 status=status.HTTP_202_ACCEPTED,
             )
-        except customer.DoesNotExist:
-            return JsonResponse(
-                {"error": "Invalid token."},
-                status=status.HTTP_406_NOT_ACCEPTABLE,
-            )
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid JSON format."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except Exception as e:
             return JsonResponse(
                 {"error": f"An unexpected error occurred: {str(e)}"},
@@ -152,7 +146,7 @@ def verify_email(request):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
@@ -165,55 +159,60 @@ def sign_in_customer(request):
         email = data.get("email")
         password = data.get("password")
 
+        if not email:
+            return JsonResponse(
+                {"message": "Email is required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not password:
+            return JsonResponse(
+                {"message": "Password is required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         try:
             customer = Customer.objects.get(email=email)
             checked = customer.check_password(password)
-            if checked and customer.email is not None:
-                # Generate token for locale storage
-                expiration_time = datetime.datetime.now(
-                    datetime.timezone.utc
-                ) + datetime.timedelta(days=7)
 
-                token = jwt.encode(
-                    {"exp": expiration_time, "user_id": str(customer.id)},
-                    settings.JWT_SECRET_TOKEN,
-                    algorithm="HS256",
-                )
+            if not checked:
                 return JsonResponse(
-                    {
-                        "message": "Login successful",
-                        "user": {
-                            "id": customer.id,
-                            "firstName": customer.firstName,
-                            "lastName": customer.lastName,
-                            "email": customer.email,
-                            "street": customer.street,
-                            "houseNumber": customer.houseNumber,
-                            "zipCode": customer.zipCode,
-                            "city": customer.city,
-                            "isVerified": customer.isVerified,
-                        },
-                        "token": token,
-                    },
-                    status=status.HTTP_200_OK,
+                    {"message": "Password is incorrect"},
+                    status=status.HTTP_401_UNAUTHORIZED,
                 )
+
+            # Generate token for locale storage
+            expiration_time = datetime.datetime.now(
+                datetime.timezone.utc
+            ) + datetime.timedelta(days=7)
+
+            token = jwt.encode(
+                {"exp": expiration_time, "user_id": str(customer.id)},
+                settings.JWT_SECRET_TOKEN,
+                algorithm="HS256",
+            )
             return JsonResponse(
-                {"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+                {
+                    "message": "Login successful",
+                    "customer": {
+                        "id": customer.id,
+                        "firstName": customer.firstName,
+                        "lastName": customer.lastName,
+                        "email": customer.email,
+                        "street": customer.street,
+                        "houseNumber": customer.houseNumber,
+                        "zipCode": customer.zipCode,
+                        "city": customer.city,
+                        "isVerified": customer.isVerified,
+                    },
+                    "token": token,
+                },
+                status=status.HTTP_200_OK,
             )
 
         except Customer.DoesNotExist:
             return JsonResponse(
                 {"message": "Customer with this email does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValidationError as e:
-            return JsonResponse(
-                {"error": str(e, "All fields are required.")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {"error": "Invalid JSON format."}, status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
             return JsonResponse(
@@ -222,7 +221,7 @@ def sign_in_customer(request):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
