@@ -304,7 +304,7 @@ def edit_costumer_profile(request, id):
             return JsonResponse(
                 {
                     "message": "Customer profile updated",
-                    "user": {
+                    "customer": {
                         "id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
