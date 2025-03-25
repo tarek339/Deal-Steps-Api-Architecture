@@ -89,7 +89,7 @@ def sign_up_customer(request):
                     "email": email,
                     "token": token,
                     "customer": {
-                        "_id": new_customer.id,
+                        "id": new_customer.id,
                         "email": new_customer.email,
                         "isVerified": new_customer.isVerified,
                     },
@@ -126,7 +126,7 @@ def verify_email(request):
                 {
                     "message": "new customer verified",
                     "customer": {
-                        "_id": customer.id,
+                        "id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
@@ -194,7 +194,7 @@ def sign_in_customer(request):
                 {
                     "message": "Login successful",
                     "customer": {
-                        "_id": customer.id,
+                        "id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
@@ -244,7 +244,7 @@ def get_customer_profile(request):
             return JsonResponse(
                 {
                     "customer": {
-                        "_id": customer.id,
+                        "id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
@@ -335,7 +335,7 @@ def edit_costumer_profile(request, id):
                 {
                     "message": "Customer profile updated",
                     "customer": {
-                        "_id": customer.id,
+                        "id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
