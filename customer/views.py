@@ -89,7 +89,7 @@ def sign_up_customer(request):
                     "email": email,
                     "token": token,
                     "customer": {
-                        "id": new_customer.id,
+                        "_id": new_customer.id,
                         "email": new_customer.email,
                         "isVerified": new_customer.isVerified,
                     },
@@ -126,7 +126,7 @@ def verify_email(request):
                 {
                     "message": "new customer verified",
                     "customer": {
-                        "id": customer.id,
+                        "_id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
@@ -194,15 +194,17 @@ def sign_in_customer(request):
                 {
                     "message": "Login successful",
                     "customer": {
-                        "id": customer.id,
+                        "_id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
-                        "street": customer.street,
-                        "houseNumber": customer.houseNumber,
-                        "zipCode": customer.zipCode,
-                        "city": customer.city,
                         "isVerified": customer.isVerified,
+                        "address": {
+                            "street": customer.street,
+                            "houseNumber": customer.houseNumber,
+                            "zipCode": customer.zipCode,
+                            "city": customer.city,
+                        },
                     },
                     "token": token,
                 },
@@ -230,8 +232,8 @@ def sign_in_customer(request):
 @csrf_exempt
 def get_customer_profile(request):
     if request.method == "GET":
+        customer_id = authentication(request)
         try:
-            customer_id = authentication(request)
             if not customer_id:
                 return JsonResponse(
                     {"error": "Unauthorized access"},
@@ -241,15 +243,17 @@ def get_customer_profile(request):
             customer = Customer.objects.get(id=customer_id)
             return JsonResponse(
                 {
-                    "user": {
-                        "id": customer.id,
+                    "customer": {
+                        "_id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
-                        "street": customer.street,
-                        "houseNumber": customer.houseNumber,
-                        "zipCode": customer.zipCode,
-                        "city": customer.city,
+                        "address": {
+                            "street": customer.street,
+                            "houseNumber": customer.houseNumber,
+                            "zipCode": customer.zipCode,
+                            "city": customer.city,
+                        },
                         "isVerified": customer.isVerified,
                     },
                 },
@@ -285,13 +289,39 @@ def edit_costumer_profile(request, id):
         zipCode = data.get("zipCode")
         city = data.get("city")
 
+        if not firstName:
+            return JsonResponse(
+                {"message": "First name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not lastName:
+            return JsonResponse(
+                {"message": "Last name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not street:
+            return JsonResponse(
+                {"message": "Street is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not houseNumber:
+            return JsonResponse(
+                {"message": "House number is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not zipCode:
+            return JsonResponse(
+                {"message": "Zip code is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not city:
+            return JsonResponse(
+                {"message": "City is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             customer = Customer.objects.get(id=id)
-            if not customer:
-                return JsonResponse(
-                    {"message": "Customer with this ID does not exist."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
 
             customer.firstName = firstName
             customer.lastName = lastName
@@ -305,29 +335,25 @@ def edit_costumer_profile(request, id):
                 {
                     "message": "Customer profile updated",
                     "customer": {
-                        "id": customer.id,
+                        "_id": customer.id,
                         "firstName": customer.firstName,
                         "lastName": customer.lastName,
                         "email": customer.email,
-                        "street": customer.street,
-                        "houseNumber": customer.houseNumber,
-                        "zipCode": customer.zipCode,
-                        "city": customer.city,
+                        "address": {
+                            "street": customer.street,
+                            "houseNumber": customer.houseNumber,
+                            "zipCode": customer.zipCode,
+                            "city": customer.city,
+                        },
                         "isVerified": customer.isVerified,
                     },
                 },
                 status=status.HTTP_200_OK,
             )
-
-        except Customer.DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse(
-                {"message": "Customer with this ID does not exist."},
+                {"error": "Customer not found"},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValidationError as e:
-            return JsonResponse(
-                {"error": str(e, "All fields are required.")},
-                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             return JsonResponse(
@@ -336,7 +362,7 @@ def edit_costumer_profile(request, id):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
@@ -347,29 +373,39 @@ def change_constumers_password(request, id):
     if request.method == "PUT":
         body_unicode = request.body.decode("utf-8")
         data = json.loads(body_unicode)
-        prev_password = data.get("oldPassword")
+        prev_password = data.get("password")
         new_password = data.get("newPassword")
         confirm_new_password = data.get("confirmPassword")
+
+        if not prev_password:
+            return JsonResponse(
+                {"message": "Password is required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not new_password:
+            return JsonResponse(
+                {"message": "New password is required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not confirm_new_password:
+            return JsonResponse(
+                {"message": "Confirm password is required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         try:
             customer = Customer.objects.get(id=id)
             checked = customer.check_password(prev_password)
 
-            if not prev_password:
-                return JsonResponse(
-                    {"message": "Password is required"},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
-
             if not checked:
                 return JsonResponse(
-                    {"message": "Passwords must match"},
+                    {"message": "Wrong password"},
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 )
 
             if new_password != confirm_new_password:
                 return JsonResponse(
-                    {"message": "Password is incorrect"},
+                    {"message": "Passwords must match"},
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 )
             customer.password = new_password
@@ -383,11 +419,6 @@ def change_constumers_password(request, id):
             return JsonResponse(
                 {"message": "Customer with this ID does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValidationError as e:
-            return JsonResponse(
-                {"error": str(e, "All fields are required.")},
-                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             return JsonResponse(
@@ -407,8 +438,19 @@ def change_costumers_email(request, id):
     if request.method == "PUT":
         body_unicode = request.body.decode("utf-8")
         data = json.loads(body_unicode)
-        new_email = data.get("newEmail")
+        new_email = data.get("email")
         confirm_email = data.get("confirmEmail")
+
+        if not new_email:
+            return JsonResponse(
+                {"message": "New email is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not confirm_email:
+            return JsonResponse(
+                {"message": "Confirm email is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             customer = Customer.objects.get(id=id)
@@ -431,7 +473,7 @@ def change_costumers_email(request, id):
             )
 
             send_mail(
-                "Verify Your Email",
+                "Verify Your new email",
                 f"Hi, please verify your email by clicking on the link: {verification_link}",
                 settings.DEFAULT_FROM_EMAIL,
                 [new_email],
@@ -442,15 +484,10 @@ def change_costumers_email(request, id):
                 status=status.HTTP_200_OK,
             )
 
-        except Customer.DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse(
-                {"message": "Customer with this ID does not exist."},
+                {"error": "Customer not found"},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValidationError as e:
-            return JsonResponse(
-                {"error": str(e, "All fields are required.")},
-                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             return JsonResponse(
@@ -459,7 +496,7 @@ def change_costumers_email(request, id):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
