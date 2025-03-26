@@ -191,6 +191,11 @@ def sign_in_customer(request):
                 settings.JWT_SECRET_TOKEN,
                 algorithm="HS256",
             )
+
+            last_login = datetime.datetime.now()
+            customer.last_login = last_login
+            customer.save()
+
             return JsonResponse(
                 {
                     "message": "Login successful",
