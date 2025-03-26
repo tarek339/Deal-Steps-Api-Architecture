@@ -29,19 +29,19 @@ def sign_up_customer(request):
 
         if not email:
             return JsonResponse(
-                {"error": "Email is required."},
+                {"message": "Email is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if not password:
             return JsonResponse(
-                {"error": "Password is required."},
+                {"message": "Password is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             if Customer.objects.filter(email=email).exists():
                 return JsonResponse(
-                    {"error": "User with this email already exists."},
+                    {"message": "User with this email already exists."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -96,10 +96,11 @@ def sign_up_customer(request):
                 },
                 status=status.HTTP_200_OK,
             )
+
         except Exception as e:
             # Catch-all for unexpected errors
             return JsonResponse(
-                {"error": "An unexpected error occurred.", "details": str(e)},
+                {"message": "An unexpected error occurred.", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -141,7 +142,7 @@ def verify_email(request):
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An unexpected error occurred: {str(e)}"},
+                {"message": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -218,7 +219,7 @@ def sign_in_customer(request):
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An unexpected error occurred: {str(e)}"},
+                {"message": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -236,7 +237,7 @@ def get_customer_profile(request):
         try:
             if not customer_id:
                 return JsonResponse(
-                    {"error": "Unauthorized access"},
+                    {"message": "Unauthorized access"},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
@@ -261,12 +262,12 @@ def get_customer_profile(request):
             )
         except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "Customer not found"},
+                {"message": "Customer not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An error occurred: {str(e)}"},
+                {"message": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -352,12 +353,12 @@ def edit_costumer_profile(request, id):
             )
         except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "Customer not found"},
+                {"message": "Customer not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An error occurred: {str(e)}"},
+                {"message": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -422,7 +423,7 @@ def change_constumers_password(request, id):
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An error occurred: {str(e)}"},
+                {"message": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -453,6 +454,12 @@ def change_costumers_email(request, id):
             )
 
         try:
+            if Customer.objects.filter(email=new_email).exists():
+                return JsonResponse(
+                    {"message": "User with this email already exists."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             customer = Customer.objects.get(id=id)
             if new_email != confirm_email:
                 return JsonResponse(
@@ -486,12 +493,12 @@ def change_costumers_email(request, id):
 
         except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "Customer not found"},
+                {"message": "Customer not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"An error occurred: {str(e)}"},
+                {"message": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
@@ -520,12 +527,12 @@ def delete_customer(request, id):
             )
         except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "Customer with this id does not exist."},
+                {"message": "Customer with this id does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
-                {"error": f"an error occurred: {str(e)}"},
+                {"message": f"an error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     else:
