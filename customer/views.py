@@ -507,13 +507,21 @@ def delete_customer(request, id):
     if request.method == "DELETE":
         try:
             customer = get_object_or_404(Customer, id=id)
+            send_mail(
+                "Thank you for using our service",
+                f"Your account has been deleted. Hope to see you again soon.",
+                settings.DEFAULT_FROM_EMAIL,
+                [customer.email],
+                fail_silently=False,
+            )
             customer.delete()
             return JsonResponse(
                 {"message": "profile deleted"}, status=status.HTTP_204_NO_CONTENT
             )
         except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "customer not found"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Customer with this id does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
@@ -522,6 +530,6 @@ def delete_customer(request, id):
             )
     else:
         return JsonResponse(
-            {"Unprocessable entity": "Invalid request method or missing fields."},
+            {"Unprocessable entity": "Invalid request method."},
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
