@@ -7,10 +7,11 @@ from customer.models import *
 from products.lib.index import *
 from .models import *
 from django.core.exceptions import ObjectDoesNotExist
+import pandas as pd
+from urllib.parse import urlparse
 
 
 def update_products():
-    # delete_from_database(Product)
     clevertronic = scrape_products(
         "https://www.clevertronic.de/kaufen/handy-kaufen?_gl=1*1j2zqgp*_up*MQ..*_gs*MQ..&gclid=Cj0KCQjwy46_BhDOARIsAIvmcwPJz38j7niycvkvlvRCfqQ7s5dPR4QfQJ9qDU0EvrY383n9D1kk7U8aAoeDEALw_wcB",
         "clevertronic",
@@ -81,26 +82,93 @@ def update_products():
         "span",
         "text-16 leading-16 2xs:text-28 2xs:leading-28",
     )
-
-    products = (
-        clevertronic + smartphoneonly + otto + otto2 + otto3 + alternate + klarmobil
+    mactrade = scrape_products(
+        "https://www.mactrade.de/mac/",
+        "mactrade",
+        "div",
+        "cms-listing-col col-sm-6 col-lg-6 col-xl-4",
+        "a",
+        "product-name",
+        "span",
+        "list-price",
     )
-    for product in products:
-        Product.objects.update_or_create(
-            shopName=product["shopName"],
-            description=product["description"],
-            brand=product["description"].split()[0],
-            price=product["price"],
-            imageUrl=product["imageUrl"],
+    maconline = scrape_products(
+        "https://maconline.de/gebrauchte-macs-kaufen.html?___store=mm&srsltid=AfmBOor9g75WbSypEtJ2LSySHEDfgkm3Y4Iu9hha00rsCbAa0FREAQaR",
+        "maconline",
+        "li",
+        "item product product-item col-sm-6 col-md-12",
+        "a",
+        "product-item-link",
+        "span",
+        "price",
+    )
+    orbit365 = scrape_products(
+        "https://www.orbit365.de/search?type=product&q=macbook",
+        "orbit365",
+        "div",
+        "product-item product-item--vertical   1/3--tablet-and-up 1/4--desk",
+        "a",
+        "product-item__title text--strong link",
+        "span",
+        "price",
+    )
+
+    # Combine all the products
+    products = (
+        clevertronic
+        + smartphoneonly
+        + otto
+        + otto2
+        + otto3
+        + alternate
+        + klarmobil
+        + mactrade
+        + maconline
+        + orbit365
+    )
+
+    products_data = []
+
+    # Iterate over the products and construct the data
+    for index, product in enumerate(products):
+        # split the url to get the domain
+        url = urlparse(product["url"]).netloc
+        fixed_url = (
+            "https://" + url if url.endswith(".de") or url.endswith(".com") else ""
         )
-    # Product.objects.all().delete()
+        # construct the product data
+        products_data.append(
+            {
+                "Nr.": index + 1,
+                "shopName": product["shopName"],
+                "brand": product["description"].split()[0],
+                "description": product["description"],
+                "price": product["price"],
+                "imageUrl": (
+                    # include https:// if the url does not start with it
+                    fixed_url + product["imageUrl"]
+                    if not product["imageUrl"].startswith("https://")
+                    else product["imageUrl"]
+                ),
+                "url": product["url"],
+            }
+        )
+
+    # Convert to pandas DataFrame
+    # df = pd.DataFrame(products_data)
+    # Optionally, save the DataFrame to a CSV file
+    # df.to_csv("products_table.csv", index=False)
+
+    # 1. Sort the products by description
+    # - Use a method to trim by brand name and type
+    # - e.g. Apple iPhone 12 Pro Max 128GB -> Apple iPhone 12 Pro Max
+    # 2. Filter the cheapest product from each brand
+    # 3. Sort the products by brand
+    # 4. Convert a new pandas DataFrame
+    # 5. Save the DataFrame to a CSV file df.to_csv("filtered_products_table.csv", index=False)
 
 
-update_products()
-
-
-# Use pandas for data analysis and matplotlib or seaborn for visualizing the results.
-# store the results in a database
+# update_products()
 
 
 @csrf_exempt
