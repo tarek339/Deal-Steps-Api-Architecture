@@ -11,54 +11,92 @@ from django.core.exceptions import ObjectDoesNotExist
 
 def update_products():
     # delete_from_database(Product)
-    zalando = scrape_products(
-        "https://www.zalando.de/schuhe/",
-        "Zalando",
-        "article",
-        "z5x6ht _0xLoFW JT3_zV mo6ZnF _78xIQ-",
-        "h3",
-        "FtrEr_ lystZ1 FxZV-M HlZ_Tf ZkIJC- r9BRio qXofat EKabf7",
-        "h3",
-        "sDq_FX lystZ1 FxZV-M HlZ_Tf ZkIJC- r9BRio qXofat EKabf7",
-        "p",
-        ["sDq_FX lystZ1 dgII7d HlZ_Tf", "sDq_FX lystZ1 FxZV-M HlZ_Tf"],
+    clevertronic = scrape_products(
+        "https://www.clevertronic.de/kaufen/handy-kaufen?_gl=1*1j2zqgp*_up*MQ..*_gs*MQ..&gclid=Cj0KCQjwy46_BhDOARIsAIvmcwPJz38j7niycvkvlvRCfqQ7s5dPR4QfQJ9qDU0EvrY383n9D1kk7U8aAoeDEALw_wcB",
+        "clevertronic",
+        "div",
+        "product_box js_product_box",
+        "a",
+        "js_target_link",
+        "span",
+        "product_price",
     )
-    # deichmann_sale = scrape_products(
-    #     "https://www.deichmann.com/de-de/herren-schuhe/sneaker/c-mss3",
-    #     "Deichmann",
-    #     "article",
-    #     "m-product-card-entry",
-    #     "h4",
-    #     "",
-    #     "h3",
-    #     "",
-    #     "strong",
-    #     "sale",
-    # )
-    # deichmann = scrape_products(
-    #     "https://www.deichmann.com/de-de/herren-schuhe/sneaker/c-mss3",
-    #     "Deichmann",
-    #     "article",
-    #     "m-product-card-entry",
-    #     "h4",
-    #     "",
-    #     "h3",
-    #     "",
-    #     "strong",
-    #     "",
-    # )
-    # about_you = scrape_products(
-    #     "https://www.aboutyou.de/b/shop/nike-272/all?category=20345&sale=true",
-    #     "About You",
-    #     "li",
-    #     "sc-oelsaz-0 YkKBp",
-    #     "p",
-    #     "sc-1vt6vwe-0 sc-1vt6vwe-1 sc-1qsfqrd-3 jQLlAg uXZUf iBzidq",
-    #     "p",
-    #     "sc-1vt6vwe-0 sc-1vt6vwe-1 sc-1qsfqrd-4 jQLlAg uXZUf KJYZl",
-    #     "span",
-    #     "sc-2qclq4-0 sc-fruv23-0 llOhHy fzbBtI sc-18q4lz4-0 jqbzko",
-    # )
+    smartphoneonly = scrape_products(
+        "https://www.smartphoneonly.de/Handy-ohne-Vertrag",
+        "smartphoneonly",
+        "div",
+        "productbox-inner",
+        "a",
+        "text-clamp-2",
+        "div",
+        "productbox-price",
+    )
+    otto = scrape_products(
+        "https://www.otto.de/suche/handys%20angebote/#ech=29050374",
+        "otto",
+        "article",
+        "product spa js_deal_data js_find_colorChange",
+        "p",
+        "find_tile__name pl_copy100",
+        "span",
+        "find_tile__retailPrice pl_headline50 find_tile__priceValue find_tile__priceValue--red",
+    )
+    otto2 = scrape_products(
+        "https://www.otto.de/suche/handys%20angebote/#ech=29050374",
+        "otto",
+        "article",
+        "product js_find_colorChange",
+        "p",
+        "find_tile__name pl_copy100",
+        "span",
+        "find_tile__retailPrice pl_headline50 find_tile__priceValue find_tile__priceValue--red",
+    )
+    otto3 = scrape_products(
+        "https://www.otto.de/suche/handys%20angebote/#ech=29050374",
+        "otto",
+        "article",
+        "product spa js_deal_data js_find_colorChange",
+        "p",
+        "find_tile__name pl_copy100",
+        "span",
+        "find_tile__retailPrice pl_headline50 find_tile__priceValue find_tile__priceValue--red",
+    )
+    alternate = scrape_products(
+        "https://www.alternate.de/Smartphone/Apple-Smartphones",
+        "alternate",
+        "a",
+        "card align-content-center productBox boxCounter campaign-timer-container",
+        "div",
+        "product-name font-weight-bold",
+        "span",
+        "price",
+    )
+    klarmobil = scrape_products(
+        "https://www.klarmobil.de/handy-kaufen/",
+        "klarmobil",
+        "div",
+        "bg-white rounded-16 shadow-mobile lg:shadow-desktop transition-shadow overflow-hidden w-full max-w-328 xl:max-w-[392px] hover:shadow-desktop lg:hover:shadow-hover",
+        "span",
+        "text-black-100 text-center has-exception text-headline-6 default no-hyphens",
+        "span",
+        "text-16 leading-16 2xs:text-28 2xs:leading-28",
+    )
+
+    products = (
+        clevertronic + smartphoneonly + otto + otto2 + otto3 + alternate + klarmobil
+    )
+    for product in products:
+        Product.objects.update_or_create(
+            shopName=product["shopName"],
+            description=product["description"],
+            brand=product["description"].split()[0],
+            price=product["price"],
+            imageUrl=product["imageUrl"],
+        )
+    # Product.objects.all().delete()
+
+
+update_products()
 
 
 # Use pandas for data analysis and matplotlib or seaborn for visualizing the results.

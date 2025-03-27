@@ -8,10 +8,8 @@ def scrape_products(
     shop_name,
     products_tag,
     products_class,
-    brand_tag,
-    brand_class,
-    name_tag,
-    name_class,
+    description_tag,
+    description_class,
     price_tag,
     price_class,
 ):
@@ -29,16 +27,15 @@ def scrape_products(
         # Update this selector based on the actual HTML structure
         products = soup.find_all(products_tag, class_=products_class)
 
+        # Loop through the products and extract the data
         for product in products:
             shop = shop_name
-            brand = product.find(brand_tag, class_=brand_class)
-            name = product.find(name_tag, class_=name_class)
+            description = product.find(description_tag, class_=description_class)
             price = product.find(price_tag, class_=price_class)
             image = product.find("img")
 
             # Use .text.strip() and handle potential None types
-            product_brand = brand.text.strip() if brand else None
-            product_name = name.text.strip() if name else None
+            product_description = description.text.strip() if description else None
             product_price = price.text.strip() if price else None
             image_url = image["src"] if image and "src" in image.attrs else None
 
@@ -49,6 +46,7 @@ def scrape_products(
                     )
                     # Replace the comma with a dot for float conversion
                     cleaned_price_str = cleaned_price_str.replace(",", ".")
+
                 else:
                     cleaned_price_str = 0
 
@@ -57,11 +55,10 @@ def scrape_products(
 
             floated_product_price = clean_price(product_price)
 
-            # Append data to the product_data list only if product_name and title are found
+            # Append data to the product_data list only if product_description and title are found
             if (
-                product_brand
-                and shop
-                and product_name
+                shop
+                and product_description
                 and floated_product_price
                 and floated_product_price > 0
                 and image_url
@@ -69,8 +66,7 @@ def scrape_products(
                 product_data.append(
                     {
                         "shopName": shop,
-                        "brand": product_brand,
-                        "name": product_name,
+                        "description": product_description,
                         "price": floated_product_price,
                         "imageUrl": image_url,
                     }
