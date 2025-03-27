@@ -65,8 +65,14 @@ def scrape_products(
             ):
                 product_data.append(
                     {
+                        "url": url,
                         "shopName": shop,
-                        "description": product_description,
+                        "description": (
+                            product_description.replace('"', "")
+                            if product_description.startswith('"')
+                            and product_description.endswith('"')
+                            else product_description
+                        ),
                         "price": floated_product_price,
                         "imageUrl": image_url,
                     }
