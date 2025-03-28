@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
 pandas = "*"
 beautifulsoup4 = "*"
 djangorestframework-simplejwt = "*"
@@ -15,6 +14,7 @@ django-debug-toolbar = "*"
 pyjwt = "*"
 django-environ = "*"
 requests = "*"
+django = "*"
 
 [dev-packages]
 
