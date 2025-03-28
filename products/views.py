@@ -127,32 +127,43 @@ def update_products():
         + orbit365
     )
 
+    # Save products into the database
+    # for product in products:
+    #     product = Product(
+    #         shopName=product["shopName"],
+    #         brand=product["description"].split()[0],
+    #         description=product["description"],
+    #         price=product["price"],
+    #         imageUrl=product["imageUrl"],
+    #     )
+    #     product.save()
+
     products_data = []
 
     # Iterate over the products and construct the data
-    for index, product in enumerate(products):
-        # split the url to get the domain
-        url = urlparse(product["url"]).netloc
-        fixed_url = (
-            "https://" + url if url.endswith(".de") or url.endswith(".com") else ""
-        )
-        # construct the product data
-        products_data.append(
-            {
-                "Nr.": index + 1,
-                "shopName": product["shopName"],
-                "brand": product["description"].split()[0],
-                "description": product["description"],
-                "price": product["price"],
-                "imageUrl": (
-                    # include https:// if the url does not start with it
-                    fixed_url + product["imageUrl"]
-                    if not product["imageUrl"].startswith("https://")
-                    else product["imageUrl"]
-                ),
-                "url": product["url"],
-            }
-        )
+    # for index, product in enumerate(products):
+    #     # split the url to get the domain
+    #     url = urlparse(product["url"]).netloc
+    #     fixed_url = (
+    #         "https://" + url if url.endswith(".de") or url.endswith(".com") else ""
+    #     )
+    #     # construct the product data
+    #     products_data.append(
+    #         {
+    #             "Nr.": index + 1,
+    #             "shopName": product["shopName"],
+    #             "brand": product["description"].split()[0],
+    #             "description": product["description"],
+    #             "price": product["price"],
+    #             "imageUrl": (
+    #                 # include https:// if the url does not start with it
+    #                 fixed_url + product["imageUrl"]
+    #                 if not product["imageUrl"].startswith("https://")
+    #                 else product["imageUrl"]
+    #             ),
+    #             "url": product["url"],
+    #         }
+    #     )
 
     # Convert to pandas DataFrame
     # df = pd.DataFrame(products_data)
@@ -168,7 +179,7 @@ def update_products():
     # 5. Save the DataFrame to a CSV file df.to_csv("filtered_products_table.csv", index=False)
 
 
-# update_products()
+update_products()
 
 
 @csrf_exempt
