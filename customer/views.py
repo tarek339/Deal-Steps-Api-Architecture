@@ -88,7 +88,6 @@ def sign_up_customer(request):
             return JsonResponse(
                 {
                     "message": "Customer signed up successfully.",
-                    "email": email,
                     "token": token,
                     "customer": {
                         "id": new_customer.id,
