@@ -1,5 +1,7 @@
 import json
 from django.shortcuts import render
+
+from products.models import Cart, CartItem
 from .models import *
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
@@ -519,6 +521,8 @@ def delete_customer(request, id):
     if request.method == "DELETE":
         try:
             customer = get_object_or_404(Customer, id=id)
+            cart = Cart.objects.get(customer=customer)
+            cart_items = CartItem.objects.filter(cart=cart)
             send_mail(
                 "Thank you for using our service",
                 f"Your account has been deleted. Hope to see you again soon.",
@@ -527,6 +531,8 @@ def delete_customer(request, id):
                 fail_silently=False,
             )
             customer.delete()
+            cart_items.delete()
+            cart.delete()
             return JsonResponse(
                 {"message": "profile deleted"}, status=status.HTTP_204_NO_CONTENT
             )
