@@ -521,8 +521,18 @@ def delete_customer(request, id):
     if request.method == "DELETE":
         try:
             customer = get_object_or_404(Customer, id=id)
-            cart = Cart.objects.get(customer=customer)
-            cart_items = CartItem.objects.filter(cart=cart)
+
+            # Check if the customer has a cart
+            cart = getattr(customer, "cart", None)
+            if cart:
+                # Delete cart items if they exist
+                cart_items = cart.items.all()
+                if cart_items.exists():
+                    cart_items.delete()
+                # Delete the cart itself
+                cart.delete()
+
+            # Delete the customer
             send_mail(
                 "Thank you for using our service",
                 f"Your account has been deleted. Hope to see you again soon.",
@@ -531,15 +541,9 @@ def delete_customer(request, id):
                 fail_silently=False,
             )
             customer.delete()
-            cart_items.delete()
-            cart.delete()
+
             return JsonResponse(
                 {"message": "profile deleted"}, status=status.HTTP_204_NO_CONTENT
-            )
-        except ObjectDoesNotExist:
-            return JsonResponse(
-                {"message": "Customer with this id does not exist."},
-                status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return JsonResponse(
