@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "customer.apps.CustomerConfig",
     "products.apps.ProductsConfig",
-    "analytics.apps.AnalyticsConfig",
     "environ",
     "rest_framework",
     "corsheaders",
