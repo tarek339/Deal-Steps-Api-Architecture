@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     path("fetch_products", views.fetch_products, name="fetch_products"),
     path(
-        "fetch_single_product/<uuid:productID>",
+        "fetch_single_product/<uuid:id>",
         views.fetch_single_product,
         name="fetch_single_product",
     ),

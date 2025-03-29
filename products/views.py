@@ -211,25 +211,22 @@ def fetch_products(request):
 
 
 @csrf_exempt
-def fetch_single_product(request, productID):
+def fetch_single_product(request, id):
     if request.method == "GET":
         try:
-            product = Product.objects.get(id=productID)
-            if not product:
-                return JsonResponse(
-                    {"error": "Product not found."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            data = {
-                "id": product.id,
-                "shopName": product.shopName,
-                "brand": product.brand,
-                "description": product.description,
-                "price": product.price,
-                "imageUrl": product.imageUrl,
-            }
+            product = Product.objects.get(id=id)
+
             return JsonResponse(
-                data,
+                {
+                    "product": {
+                        "id": product.id,
+                        "shopName": product.shopName,
+                        "brand": product.brand,
+                        "description": product.description,
+                        "price": product.price,
+                        "imageUrl": product.imageUrl,
+                    }
+                },
                 status=status.HTTP_200_OK,
             )
         except ObjectDoesNotExist:
