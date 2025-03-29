@@ -179,7 +179,7 @@ def update_products():
     # 5. Save the DataFrame to a CSV file df.to_csv("filtered_products_table.csv", index=False)
 
 
-update_products()
+# update_products()
 
 
 @csrf_exempt
@@ -261,15 +261,13 @@ def add_to_cart(request, id):
 
         cart, created = Cart.objects.get_or_create(customer=customer_id)
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-
-        if created:
-            cart_item.quantity = 1
-        else:
-            cart_item.quantity += 1
+        cart_item.quantity += 1
         cart_item.save()
 
         return JsonResponse(
-            {"message": "Item added to cart"},
+            {
+                "message": "Item added to cart",
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -295,22 +293,22 @@ def fetch_cart(request, id):
                 )
 
             cart_data = []
-            total_sum = 0
 
             for item in cart.items.all():
-                item_total_price = item.total
                 cart_data.append(
                     {
                         "id": item.product.id,
                         "brand": item.product.brand,
+                        "description": item.product.description,
                         "quantity": item.quantity,
                         "totalPrice": item.total,
+                        "price": item.product.price,
                     }
                 )
-                total_sum += item_total_price
 
             return JsonResponse(
-                {"cart": cart_data, "total": total_sum}, status=status.HTTP_200_OK
+                {"cart": {"cart": cart_data}},
+                status=status.HTTP_200_OK,
             )
 
         except ObjectDoesNotExist:
@@ -336,53 +334,22 @@ def remove_from_cart(request, id):
     if request.method == "POST":
         body_unicode = request.body.decode("utf-8")
         body_data = json.loads(body_unicode)
-        product_id = body_data.get("productId")
-        customer_id = get_object_or_404(Customer, id=id)
-        product = get_object_or_404(Product, id=product_id)
+        product_ids = body_data.get("selectedProducts")
 
         try:
+            customer_id = get_object_or_404(Customer, id=id)
+            products = Product.objects.filter(id__in=product_ids)
             cart = Cart.objects.get(customer=customer_id)
-            cart_item = CartItem.objects.get(cart=cart, product=product)
+            cart_items = CartItem.objects.filter(cart=cart, product__in=products)
 
-            if cart_item.quantity > 0:
-                cart_item.quantity -= 1
-                cart_item.save()
-
-            if cart_item.quantity <= 0:
+            for cart_item in cart_items:
                 cart_item.delete()
 
-            return JsonResponse({"message": "Item removed from cart"})
-
-        except ObjectDoesNotExist:
             return JsonResponse(
-                {"error": "No Cart found."}, status=status.HTTP_404_NOT_FOUND
+                {
+                    "message": "Item removed from cart",
+                }
             )
-        except Exception as e:
-            # Catch-all for unexpected errors
-            return JsonResponse(
-                {"error": "An unexpected error occurred.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-    else:
-        return JsonResponse(
-            {"Unprocessable entity": "Invalid request method."},
-            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
-
-
-@csrf_exempt
-def delete_cart(request, id):
-    if request.method == "POST":
-        customer_id = get_object_or_404(Customer, id=id)
-
-        try:
-            cart = Cart.objects.get(customer=customer_id)
-            cart_items = CartItem.objects.filter(cart=cart)
-
-            for item in cart_items:
-                item.delete()
-
-            return JsonResponse({"message": "Cart deleted"})
 
         except ObjectDoesNotExist:
             return JsonResponse(
