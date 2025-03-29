@@ -1,6 +1,4 @@
 import json
-from django.shortcuts import render
-
 from products.models import Cart, CartItem
 from .models import *
 from rest_framework import status
