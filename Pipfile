@@ -15,6 +15,7 @@ pyjwt = "*"
 django-environ = "*"
 requests = "*"
 django = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
