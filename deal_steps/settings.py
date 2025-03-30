@@ -112,10 +112,21 @@ WSGI_APPLICATION = "deal_steps.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": env("POSTGRE_ENGINE"),
+        "NAME": env("POSTGRE_NAME"),
+        "USER": env("POSTGRE_USER"),
+        "PASSWORD": env("POSTGRE_PASSWORD"),
+        "HOST": env("POSTGRE_HOST"),  # oder die Adresse Ihres PostgreSQL-Servers
+        "PORT": env("POSTGRE_PORT"),  # Standard-PostgreSQL-Port
     }
 }
 
