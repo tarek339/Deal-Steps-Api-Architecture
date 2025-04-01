@@ -1,5 +1,4 @@
 import json
-from products.models import Cart, CartItem
 from .models import *
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
@@ -8,7 +7,6 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from customer.authentication.authentication import authentication
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -237,14 +235,9 @@ def sign_in_customer(request):
 @csrf_exempt
 def get_customer_profile(request):
     if request.method == "GET":
+        # verfiy if the user is authenticated
         customer_id = authentication(request)
         try:
-            if not customer_id:
-                return JsonResponse(
-                    {"message": "Unauthorized access"},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
-
             customer = Customer.objects.get(id=customer_id)
             return JsonResponse(
                 {
@@ -285,6 +278,14 @@ def get_customer_profile(request):
 @csrf_exempt
 def edit_costumer_profile(request, id):
     if request.method == "PUT":
+        # verfiy if the user is authenticated
+        customer_id = authentication(request)
+        if customer_id is None:
+            return JsonResponse(
+                {"message": "Unauthorized: Token does not match customer ID."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         body_unicode = request.body.decode("utf-8")
         data = json.loads(body_unicode)
         firstName = data.get("firstName")
@@ -376,6 +377,14 @@ def edit_costumer_profile(request, id):
 @csrf_exempt
 def change_constumers_password(request, id):
     if request.method == "PUT":
+        # verfiy if the user is authenticated
+        customer_id = authentication(request)
+        if customer_id is None:
+            return JsonResponse(
+                {"message": "Unauthorized: Token does not match customer ID."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         body_unicode = request.body.decode("utf-8")
         data = json.loads(body_unicode)
         prev_password = data.get("password")
@@ -441,6 +450,14 @@ def change_constumers_password(request, id):
 @csrf_exempt
 def change_costumers_email(request, id):
     if request.method == "PUT":
+        # verfiy if the user is authenticated
+        customer_id = authentication(request)
+        if customer_id is None:
+            return JsonResponse(
+                {"message": "Unauthorized: Token does not match customer ID."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         body_unicode = request.body.decode("utf-8")
         data = json.loads(body_unicode)
         new_email = data.get("email")
@@ -516,6 +533,14 @@ def change_costumers_email(request, id):
 @csrf_exempt
 def delete_customer(request, id):
     if request.method == "DELETE":
+        # verfiy if the user is authenticated
+        customer_id = authentication(request)
+        if customer_id is None:
+            return JsonResponse(
+                {"message": "Unauthorized: Token does not match customer ID."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         try:
             customer = get_object_or_404(Customer, id=id)
 
